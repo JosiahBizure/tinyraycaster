@@ -8,7 +8,7 @@
 // Packs 4 bytes (RGBA) into a single 32-bit integer
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 
-// Unpacks a 32-bit color into its RGBA components
+// Unpacks a 32-bit color into its R, G, B, and A components
 void unpack_color(const uint32_t& color, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a);
 
 // Writes a framebuffer (stored as packed 32-bit color values) to a PPM image file.
