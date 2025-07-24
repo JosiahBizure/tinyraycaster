@@ -125,8 +125,9 @@ int main() {
 
     assert(sizeof(map) == map_h * map_w + 1); // +1 for the null terminated string
 
-    float player_x = 3.456; // player x position
-    float player_y = 2.345; // player y position
+    float player_x = 3.456f; // player x position (map coordinates)
+    float player_y = 2.345f; // player y position (map coordinates)
+    float player_angle = 1.523f; // player viewing angle in radians (0 = facing right, counter-clockwise)
 
     for (size_t row = 0; row < win_h; ++row) {  // For each pixel
         for (size_t col = 0; col < win_w; ++col) {
@@ -215,6 +216,32 @@ int main() {
                 5, 5,
                 pack_color(255, 255, 255) // white
             );
+
+    /*
+        Cast a simple ray from the player's position in their viewing direction.
+
+        The ray is stepped forward in small increments (delta_t),
+        and stops when it hits a non-empty cell on the map.
+
+        Each point along the ray is drawn as a white pixel in the framebuffer.
+    */
+    const float ray_step = 0.05f;
+    const float ray_length = 20.0f;
+
+    for (float t = 0.0f; t < ray_length; t += ray_step) {
+        float ray_x = player_x + t * std::cos(player_angle);
+        float ray_y = player_y + t * std::sin(player_angle);
+
+        // Stop the ray if it hits a wall (non-space cell)
+        if (map[int(ray_x) + int(ray_y) * map_w] != ' ') break;
+
+        // Convert ray position from map coordinates to pixel coordinates
+        size_t pixel_x = static_cast<size_t>(ray_x * rect_w);
+        size_t pixel_y = static_cast<size_t>(ray_y * rect_h);
+
+        // Set the pixel at the ray position to white
+        framebuffer[pixel_x + pixel_y * win_w] = pack_color(255, 255, 255);
+    }
 
     // Takes the pixel data from framebuffer and writes it to disk in PPM format
     drop_ppm_image("./out.ppm", framebuffer, win_h, win_w);

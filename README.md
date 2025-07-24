@@ -24,3 +24,8 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
     - Adds floating-point `(x, y)` coordinates to represent the player in map space  
     - Converts player position to pixel space and draws a small 5×5 white square  
     - Independent of map content; no collision or orientation yet
+
+- **Step 4**: Cast a simple ray from the player's viewpoint  
+    - Adds `player_angle` to define viewing direction (in radians)  
+    - Steps along a ray using cosine and sine to compute (x, y) positions  
+    - Stops when a wall is hit; draws each ray point in white
