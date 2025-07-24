@@ -19,3 +19,8 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
     - Each map cell corresponds to a 32×32 block in the image  
     - Non-space characters are drawn as cyan rectangles over the gradient  
     - Uses `draw_rectangle()` helper to fill pixel regions based on map layout
+
+- **Step 3**: Draw the player’s position on the map  
+    - Adds floating-point `(x, y)` coordinates to represent the player in map space  
+    - Converts player position to pixel space and draws a small 5×5 white square  
+    - Independent of map content; no collision or orientation yet

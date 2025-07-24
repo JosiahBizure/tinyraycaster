@@ -125,6 +125,9 @@ int main() {
 
     assert(sizeof(map) == map_h * map_w + 1); // +1 for the null terminated string
 
+    float player_x = 3.456; // player x position
+    float player_y = 2.345; // player y position
+
     for (size_t row = 0; row < win_h; ++row) {  // For each pixel
         for (size_t col = 0; col < win_w; ++col) {
             /*
@@ -196,6 +199,22 @@ int main() {
             );
         }
     }
+
+    /*
+        Draw the player as a small white square on the map.
+
+        The player’s position is defined in map space (floating-point grid coords),
+        not pixel space, so we convert it to image pixel space by scaling with rect_w and rect_h.
+
+        The marker is always a fixed 5×5 square regardless of zoom or cell size.
+    */
+    draw_rectangle(
+                framebuffer,
+                win_w, win_h,
+                player_x * rect_w, player_y * rect_h,
+                5, 5,
+                pack_color(255, 255, 255) // white
+            );
 
     // Takes the pixel data from framebuffer and writes it to disk in PPM format
     drop_ppm_image("./out.ppm", framebuffer, win_h, win_w);
