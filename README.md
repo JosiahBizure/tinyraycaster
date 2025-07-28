@@ -29,3 +29,8 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
     - Adds `player_angle` to define viewing direction (in radians)  
     - Steps along a ray using cosine and sine to compute (x, y) positions  
     - Stops when a wall is hit; draws each ray point in white
+
+- **Step 5**: Render a visibility cone using many rays  
+    - Adds `fov` (field of view) and casts one ray per horizontal screen column  
+    - Each ray marches forward until it hits a wall, drawing a white pixel trail  
+    - The result is a full visibility cone projected from the player’s perspective  

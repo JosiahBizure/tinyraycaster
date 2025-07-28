@@ -128,6 +128,8 @@ int main() {
     float player_x = 3.456f; // player x position (map coordinates)
     float player_y = 2.345f; // player y position (map coordinates)
     float player_angle = 1.523f; // player viewing angle in radians (0 = facing right, counter-clockwise)
+    const float fov = M_PI / 3.0f; // 60 degree field of view
+
 
     for (size_t row = 0; row < win_h; ++row) {  // For each pixel
         for (size_t col = 0; col < win_w; ++col) {
@@ -185,7 +187,7 @@ int main() {
                 Convert map grid coordinates (col, row) to pixel coordinates (x, y)
                 Say we're drawing cell (5, 2) in map space:
                     - it's the 6th column and 3rd row of the map
-                    - Converted to pixel coordinates plug in the values to get (160, 64)
+                    - Converting to pixel coordinates plug in the values to get (160, 64)
             */
             size_t pixel_x = col * rect_w;
             size_t pixel_y = row * rect_h;
@@ -218,29 +220,33 @@ int main() {
             );
 
     /*
-        Cast a simple ray from the player's position in their viewing direction.
+        Cast multiple rays in a fan pattern from the player’s viewpoint,
+        covering the entire field of view.
 
-        The ray is stepped forward in small increments (delta_t),
-        and stops when it hits a non-empty cell on the map.
-
-        Each point along the ray is drawn as a white pixel in the framebuffer.
+        We cast one ray per horizontal screen column (win_w),
+        linearly interpolating the angle from [player_angle - fov/2, player_angle + fov/2].
     */
     const float ray_step = 0.05f;
     const float ray_length = 20.0f;
 
-    for (float t = 0.0f; t < ray_length; t += ray_step) {
-        float ray_x = player_x + t * std::cos(player_angle);
-        float ray_y = player_y + t * std::sin(player_angle);
+    for (size_t col = 0; col < win_w; ++col) {
+        // Compute the current ray angle across the FOV
+        float ray_angle = player_angle - fov / 2.0f + fov * (col / float(win_w));
 
-        // Stop the ray if it hits a wall (non-space cell)
-        if (map[int(ray_x) + int(ray_y) * map_w] != ' ') break;
+        for (float t = 0.0f; t < ray_length; t += ray_step) {
+            float ray_x = player_x + t * std::cos(ray_angle);
+            float ray_y = player_y + t * std::sin(ray_angle);
 
-        // Convert ray position from map coordinates to pixel coordinates
-        size_t pixel_x = static_cast<size_t>(ray_x * rect_w);
-        size_t pixel_y = static_cast<size_t>(ray_y * rect_h);
+            // Stop drawing if ray hits a non-empty map cell (a wall)
+            if (map[int(ray_x) + int(ray_y) * map_w] != ' ') break;
 
-        // Set the pixel at the ray position to white
-        framebuffer[pixel_x + pixel_y * win_w] = pack_color(255, 255, 255);
+            // Convert map coordinates to pixel coordinates
+            size_t pixel_x = static_cast<size_t>(ray_x * rect_w);
+            size_t pixel_y = static_cast<size_t>(ray_y * rect_h);
+
+            // Draw a white pixel at this ray position
+            framebuffer[pixel_x + pixel_y * win_w] = pack_color(255, 255, 255);
+        }
     }
 
     // Takes the pixel data from framebuffer and writes it to disk in PPM format
