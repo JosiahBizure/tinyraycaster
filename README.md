@@ -34,3 +34,11 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
     - Adds `fov` (field of view) and casts one ray per horizontal screen column  
     - Each ray marches forward until it hits a wall, drawing a white pixel trail  
     - The result is a full visibility cone projected from the player’s perspective  
+
+- **Step 6**: Split Screen — 2D Map + 3D Projection
+    - The **left half** (512px) shows a top-down map view of the player and walls.
+    - The **right half** (512px) contains a basic raycasted projection to simulate a 3D environment.
+    - Each ray marches forward from the player's position until it hits a wall, where we:
+        - Draw a gray dot on the 2D map.
+        - Render a vertical wall slice in the 3D view (column height inversely proportional to distance).
+    - This simulates a basic Wolfenstein-style visibility cone and perspective rendering.
