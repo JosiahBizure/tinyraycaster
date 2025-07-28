@@ -203,7 +203,7 @@ int main() {
                 if (map[int(ray_x) + int(ray_y) * map_w] != ' ') {
                     size_t icolor = map[int(ray_x) + int(ray_y) * map_w] - '0';
                     assert(icolor < ncolors);
-                    size_t column_height = win_h / t;
+                    size_t column_height = win_h / (t * std::cos(ray_angle - player_angle));
                     draw_rectangle(
                         framebuffer,
                         win_w, win_h,

@@ -1,0 +1,17 @@
+# Ignore all .ppm image frames
+*.ppm
+
+# VSCode settings
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Compiled binary
+tinyraycaster
+*.out
+*.exe
+
+# Temporary files
+*.log
+*.tmp

@@ -49,3 +49,9 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
     - Assigns a **random color to each wall type** (`'0'`, `'1'`, etc.) for easy visual differentiation  
     - Each frame includes both the **2D map** and the **3D projection**, as in Step 6  
     - Resulting images can be compiled into a `.gif` or `.mp4` using external tools
+
+- **Step 8**: Correct fisheye distortion in 3D projection  
+    - Original rendering used raw ray distance, which caused a fisheye lens effect  
+    - Applied cosine correction to adjust each column's height based on its angle:  
+    - This simulates how a player would *actually* perceive depth — correcting for angled rays  
+    - Now walls look straight and proportionally scaled across the field of view
