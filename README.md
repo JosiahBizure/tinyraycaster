@@ -42,3 +42,10 @@ This is not a finished game, it's a learning tool. I'm focusing on clarity over 
         - Draw a gray dot on the 2D map.
         - Render a vertical wall slice in the 3D view (column height inversely proportional to distance).
     - This simulates a basic Wolfenstein-style visibility cone and perspective rendering.
+
+- **Step 7**: First animation — rotating the player’s view  
+    - Loops over **360 frames**, incrementing the player’s viewing angle each time  
+    - Renders a full circular sweep from the player’s perspective, saving each frame as a `.ppm` image  
+    - Assigns a **random color to each wall type** (`'0'`, `'1'`, etc.) for easy visual differentiation  
+    - Each frame includes both the **2D map** and the **3D projection**, as in Step 6  
+    - Resulting images can be compiled into a `.gif` or `.mp4` using external tools

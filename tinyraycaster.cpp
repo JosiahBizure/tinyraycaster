@@ -2,6 +2,8 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -112,6 +114,12 @@ int main() {
     float player_angle = 1.523f; // player viewing angle in radians (0 = facing right, counter-clockwise)
     const float fov = M_PI / 3.0f; // 60 degree field of view
 
+    const size_t ncolors = 10;
+    std::vector<uint32_t> colors(ncolors);
+    for (size_t i = 0; i < ncolors; i++) {
+        colors[i] = pack_color(rand() % 255, rand() % 255, rand() % 255);
+    }
+
     /*
         Want to overlay the map on top of the gradient background.
         We'll draw a rectangle for each map cell, scaled to the image size
@@ -123,79 +131,91 @@ int main() {
     const size_t rect_h = win_h / map_h;
 
 
-    /*
-        Draw the map:
-            - Loop through every cell in the map grid.
-            - For each non-empty cell in the map grid, draw a filled rectangle (cyan)
-              in the framebuffer corresponding to that cell's position in the grid.
-    */
-    for (size_t row = 0; row < map_h; ++row) {
-        for (size_t col = 0; col < map_w; ++col) {
-            char cell = map[row * map_w + col];
+    for (size_t frame = 0; frame < 360; ++frame) {
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(5) << frame << ".ppm";
+        player_angle += 2 * M_PI / 360;
 
-            // Skip drawing if the cell is a space (empty)
-            if (cell == ' ') continue;
+        framebuffer = std::vector<uint32_t>(win_w * win_h, pack_color(255, 255, 255)); // clear the screen
 
-            /*
-                Convert map grid coordinates (col, row) to pixel coordinates (x, y)
-                Say we're drawing cell (5, 2) in map space:
-                    - it's the 6th column and 3rd row of the map
-                    - Converting to pixel coordinates plug in the values to get (160, 64)
-            */
-            size_t pixel_x = col * rect_w;
-            size_t pixel_y = row * rect_h;
+        /*
+            Draw the map:
+                - Loop through every cell in the map grid.
+                - For each non-empty cell in the map grid, draw a filled rectangle (cyan)
+                in the framebuffer corresponding to that cell's position in the grid.
+        */
+        for (size_t row = 0; row < map_h; ++row) {
+            for (size_t col = 0; col < map_w; ++col) {
+                char cell = map[row * map_w + col];
 
-            // Draw a filled 32x32 cyan rectangle at the pixel location [(160, 64) in my example]
-            draw_rectangle(
-                framebuffer,
-                win_w, win_h,
-                pixel_x, pixel_y,
-                rect_w, rect_h,
-                pack_color(0, 255, 255) // cyan
-            );
-        }
-    }
+                // Skip empty space
+                if (cell == ' ') continue;
 
-    /*
-        Draw the visibility cone and "3D" view based on player's viewpoint
+                /*
+                    Convert map grid coordinates (col, row) to pixel coordinates (x, y)
+                    Say we're drawing cell (5, 2) in map space:
+                        - it's the 6th column and 3rd row of the map
+                        - Converting to pixel coordinates plug in the values to get (160, 64)
+                */
+                size_t pixel_x = col * rect_w;
+                size_t pixel_y = row * rect_h;
 
-        We cast one ray per horizontal screen column (win_w),
-        linearly interpolating the angle from [player_angle - fov/2, player_angle + fov/2].
-    */
-    const float ray_step = 0.05f;
-    const float ray_length = 20.0f;
+                size_t icolor = map[col + row * map_w] - '0';
+                assert(icolor<ncolors);
 
-    for (size_t col = 0; col < win_w / 2; ++col) {
-        // Compute the current ray angle across the FOV
-        float ray_angle = player_angle - fov / 2.0f + fov * (col / float(win_w / 2));
-
-        for (float t = 0.0f; t < ray_length; t += ray_step) {
-            float ray_x = player_x + t * std::cos(ray_angle);
-            float ray_y = player_y + t * std::sin(ray_angle);
-
-            // Convert map coordinates to pixel coordinates
-            size_t pixel_x = static_cast<size_t>(ray_x * rect_w);
-            size_t pixel_y = static_cast<size_t>(ray_y * rect_h);
-
-            // Draw a white pixel at this ray position
-            framebuffer[pixel_x + pixel_y * win_w] = pack_color(160, 160, 160);
-
-            // If ray hits a non-empty map cell (a wall), draw vertical column ("3D")
-            if (map[int(ray_x) + int(ray_y) * map_w] != ' ') {
-                size_t column_height = win_h / t;
+                // Draw a filled 32x32 cyan rectangle at the pixel location [(160, 64) in my example]
                 draw_rectangle(
                     framebuffer,
                     win_w, win_h,
-                    win_w / 2 + col, win_h / 2 - column_height / 2,
-                    1, column_height,
-                    pack_color(0, 255, 255)
+                    pixel_x, pixel_y,
+                    rect_w, rect_h,
+                    colors[icolor]
                 );
-                break;
             }
         }
+
+
+        /*
+            Draw the visibility cone and "3D" view based on player's viewpoint
+
+            We cast one ray per horizontal screen column (win_w),
+            linearly interpolating the angle from [player_angle - fov/2, player_angle + fov/2].
+        */
+        const float ray_step = 0.01f;
+        const float ray_length = 20.0f;
+
+        for (size_t col = 0; col < win_w / 2; ++col) {
+            // Compute the current ray angle across the FOV
+            float ray_angle = player_angle - fov / 2.0f + fov * (col / float(win_w / 2));
+
+            for (float t = 0.0f; t < ray_length; t += ray_step) {
+                float ray_x = player_x + t * std::cos(ray_angle);
+                float ray_y = player_y + t * std::sin(ray_angle);
+
+                // Convert map coordinates to pixel coordinates
+                size_t pixel_x = static_cast<size_t>(ray_x * rect_w);
+                size_t pixel_y = static_cast<size_t>(ray_y * rect_h);
+
+                // Draw a white pixel at this ray position
+                framebuffer[pixel_x + pixel_y * win_w] = pack_color(160, 160, 160);
+
+                // If ray hits a wall, draw vertical column to create illusion of 3D
+                if (map[int(ray_x) + int(ray_y) * map_w] != ' ') {
+                    size_t icolor = map[int(ray_x) + int(ray_y) * map_w] - '0';
+                    assert(icolor < ncolors);
+                    size_t column_height = win_h / t;
+                    draw_rectangle(
+                        framebuffer,
+                        win_w, win_h,
+                        win_w / 2 + col, win_h / 2 - column_height / 2,
+                        1, column_height,
+                        colors[icolor]
+                    );
+                    break;
+                }
+            }
+        }
+        drop_ppm_image(ss.str(), framebuffer, win_w, win_h);
     }
-
-    drop_ppm_image("./out.ppm", framebuffer, win_w, win_h);
-
     return 0;
 }
